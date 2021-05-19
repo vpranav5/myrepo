@@ -1,0 +1,322 @@
+---
+title: "Project1"
+output: github_document
+always_allow_html: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Name: Pranav Varanasi
+UTEID: ptv247
+
+## R Markdown
+
+Title: How do we get power?
+
+Part 1: Introduction
+
+As recently experienced with the Texas snowstorms, the reliability and efficiency of the energy grid is crucial to maintaining a basic quality of life for an individual.
+Issues with power can cause widespread chaos and quickly shut down the fundamental functions of modern society. The key issue made relevant by these Texas storms is the impact of climate change and the need for a continued reliance on renewable energy. With this issue in mind, I became curious as to the main sources of power running all the states across the country. In addition, I began to wonder how much of the country had already transitioned to renewable energy sources like solar, wind, and geothermal and how many states still had a majority dependence on non-renewable sources like natural gas and coal. Throughout the course of this project, I hope to identify which states and regions are most reliant on forms of renewable energy and understand how much of the energy grid needs to transition in order to make the majority of the country reliant on green power. I expect that policies surrounding renewable energy are politically driven and that the West coast region and states with heavy Democratic interests will be more reliant on renewable energy than the rest of the country. 
+
+
+To answer these questions, I chose two datasets that together provide the energy sources by state from 1960 - 2014 as well as region/division identifiers for each state. 
+The main advantage I have in grouping these two datasets is to be able to group states by region and identify the main sources of energy. 
+
+More information about these datasets can be found below:
+
+Dataset 1: Energy.csv 
+- Provides energy sources by state from 1960 - 2014
+- Sources: 
+- https://corgis-edu.github.io/corgis/csv/energy/
+- https://www.eia.gov/tools/faqs/
+
+Dataset 2: usa_states.csv 
+- Provides abbreviations and region/division identifiers for each state
+- Source: 
+- Inbuilt R-dataset from "stevedata" library
+- https://vincentarelbundock.github.io/Rdatasets/datasets.html
+
+Part 2: Import + Tidy
+```{r}
+
+
+# Import stevedata for in-built usa_states dataset
+library(stevedata)
+
+# Import tidyverse and dplyr operations
+library(tidyverse)
+library(dplyr)
+
+# Read in online energy data from 1960 - 2014 and save as dataframe
+energyData <- read_csv("energy.csv")
+
+# Clean datasets:
+# Both datasets are already TIDY since each observation has its own row and each variable has its own column
+
+# Dataset 1: Energy.csv
+# Drop all Production, Expenditure, and Price columns from energyData
+# Only want columns for Consumption across different sectors, Commercial, Electric Power, Industrial, Refinery, Residential, and Transportation
+
+energyTrimmed <- energyData %>%  select(-"Production.Coal") %>% select(-"Expenditure.Commercial.Coal") %>% select(-"Expenditure.Commercial.Distillate Fuel Oil") %>%  select(-"Expenditure.Commercial.Kerosene") %>% select(-"Expenditure.Commercial.Liquefied Petroleum Gases") %>% select(-"Expenditure.Commercial.Natural Gas") %>%  select(-"Expenditure.Electric Power.Coal") %>% select(-"Expenditure.Electric Power.Distillate Fuel Oil") %>% select(-"Expenditure.Electric Power.Natural Gas") %>% select(-"Expenditure.Industrial.Coal") %>%  select(-"Expenditure.Industrial.Distillate Fuel Oil") %>% select(-"Expenditure.Industrial.Kerosene") %>% select(-"Expenditure.Industrial.Liquefied Petroleum Gases") %>% select(-"Expenditure.Industrial.Natural Gas") %>% select(-"Expenditure.Industrial.Other Petroleum Products") %>%  select(-"Expenditure.Residential.Coal") %>% select(-"Expenditure.Residential.Distillate Fuel Oil") %>% select(-"Expenditure.Residential.Kerosene") %>% select(-"Expenditure.Residential.Liquefied Petroleum Gases") %>%  select(-"Expenditure.Residential.Natural Gas") %>% select(-"Expenditure.Residential.Wood") %>%  select(-"Expenditure.Transportation.Coal") %>% select(-"Expenditure.Transportation.Distillate Fuel Oil") %>% select(-"Expenditure.Transportation.Liquefied Petroleum Gases") %>% select(-"Expenditure.Transportation.Natural Gas") %>%  select(-"Price.Commercial.Coal") %>% select(-"Price.Commercial.Distillate Fuel Oil") %>% select(-"Price.Commercial.Kerosene") %>% select(-"Price.Commercial.Liquefied Petroleum Gases") %>%  select(-"Price.Commercial.Natural Gas")  %>% select(-"Price.Electric Power.Coal") %>% select(-"Price.Electric Power.Distillate Fuel Oil") %>%  select(-"Price.Electric Power.Natural Gas") %>% select(-"Price.Industrial.Coal") %>% select(-"Price.Industrial.Distillate Fuel Oil") %>% select(-"Price.Industrial.Kerosene") %>%  select(-"Price.Industrial.Liquefied Petroleum Gases") %>% select(-"Price.Industrial.Natural Gas") %>%  select(-"Price.Industrial.Other Petroleum Products") %>% select(-"Price.Transportation.Coal") %>% select(-"Price.Transportation.Distillate Fuel Oil") %>% select(-"Price.Transportation.Liquefied Petroleum Gases") %>%  select(-"Price.Transportation.Natural Gas") 
+
+
+# Create new variables/columns to represent total renewable and total non-renewable energy per year for each state
+# Renewable Energy Types: Geothermal, Hydropower, Solar, Wind, Wood
+# Non-Renewable Energy Types: Coal, Distillate Fuel Oil, Kerosene, Liqueified Petroleum Gases, Natural Gas
+
+# Sum up all non-renewable energy sources and save them in one column, units are in billions of BTU (British Thermal Unit)
+# Move column to front of dataframe with .before operator
+energySum <- energyTrimmed %>% mutate(nonRenewableTotal = Consumption.Commercial.Coal  + `Consumption.Commercial.Distillate Fuel Oil` + Consumption.Commercial.Kerosene +  `Consumption.Commercial.Liquefied Petroleum Gases` + 
+`Consumption.Commercial.Natural Gas` + `Consumption.Electric Power.Coal` + `Consumption.Electric Power.Distillate Fuel Oil` +
+`Consumption.Electric Power.Natural Gas` + Consumption.Industrial.Coal + `Consumption.Industrial.Distillate Fuel Oil` + Consumption.Industrial.Kerosene + `Consumption.Industrial.Liquefied Petroleum Gases` + `Consumption.Industrial.Natural Gas` + `Consumption.Industrial.Other Petroleum Products`  + Consumption.Refinery.Coal + `Consumption.Refinery.Distillate Fuel Oil` +  `Consumption.Refinery.Liquefied Petroleum Gases` + `Consumption.Refinery.Natural Gas` +  Consumption.Residential.Coal + `Consumption.Residential.Distillate Fuel Oil` + Consumption.Residential.Kerosene + `Consumption.Residential.Liquefied Petroleum Gases` + `Consumption.Residential.Natural Gas` + Consumption.Transportation.Coal 
++ `Consumption.Transportation.Distillate Fuel Oil` + `Consumption.Transportation.Liquefied Petroleum Gases` + `Consumption.Transportation.Natural Gas`, .before = Consumption.Commercial.Coal)
+
+
+# Sum up all reneable energy sources, put renewable column before nonRenewable column
+# Save fully formatted dataset as energyClean
+energyClean <- energySum %>% mutate(renewableTotal = Consumption.Commercial.Geothermal + Consumption.Commercial.Hydropower + Consumption.Commercial.Solar + Consumption.Commercial.Wind + Consumption.Commercial.Wood + 
+`Consumption.Electric Power.Wood` + Consumption.Industrial.Geothermal + Consumption.Industrial.Hydropower + Consumption.Industrial.Solar + Consumption.Industrial.Wind + Consumption.Industrial.Wood
+ + Consumption.Residential.Geothermal + Consumption.Residential.Wood, .before = nonRenewableTotal)
+
+
+# Dataset 2: usa_states.csv
+# Dataset 2 is already in proper ascending order by state and has all relevant columns
+
+```
+The first obsevation I made is that both of my datasets are already tidy since each observation has its own row and each variable has its own column.
+An important decision I made here for my energy source dataset is to focus only on variables of consumption to measure a state's reliance on a certain form of energy.
+To address this, I dropped all the non-essential columns related to the Production, Expenditure, and Price of energy reducing the total number of variables from 80 to 42..
+In addition, I added 3 new variables, percentRenewable, renewableTotal, and nonRenewableTotal thhat would summarize the total renewable and non-renewable sources of energy for each state.
+These changes helped me come up with a cleaner dataset that I could easily draw conclusions from.
+
+Part 3: Join/Merge
+```{r}
+
+# Rename statename variable so it matches up with energy dataset
+renameStates <- usa_states %>% rename('State' = statename)
+
+# Perform left join with energy clean dataset
+energyJoin <- energyClean %>% left_join(renameStates, by = 'State')
+
+# Use anti join to see if any cases should be dropped
+energyAnti <- energyClean %>% anti_join(renameStates, by = 'State')
+
+```
+
+
+
+To join my two datasets, I performed a left join because I wanted to keep all rows in the main energy dataset (enerrrgyClean) and just add the state name, region, division columns from the second dataset at the end.
+I needed to keep all the rows in energyClean because it contained all the important Consumption statistics for each state.
+In addition, I performed an anti_join against my energyClean and renameStates datasets to check if any cases were dropped from the left join.
+Since the resultant dataframe from anti_join came up empty, I could safely assume that no cases were dropped from the left join.
+
+
+Part 4: Summary Statistics
+```{r}
+
+# Sort dataframe in ascending order of state names
+# Sorting is needed to group all data for one state together and make overall table visually understandable
+energyJoin <- energyJoin %>% arrange(State)
+
+# Add a percent renewable variable for each state
+energyJoin <- energyJoin %>% mutate(percentRenewable = (renewableTotal / (renewableTotal + nonRenewableTotal)) * 100, .before = renewableTotal)
+
+# import libraries for kable table rendering
+#install.packages("kableExtra")
+library(kableExtra)
+
+# Statistic 1: Overall Case, Get mean values of entire dataset without grouping by categorial variable
+energyJoin %>% group_by(State) %>% summarise(renewablePercent = mean(percentRenewable), renewable = mean(renewableTotal), nonRenewable = mean(nonRenewableTotal), commCol = mean(Consumption.Commercial.Coal), commOil = mean(`Consumption.Commercial.Distillate Fuel Oil`), commKerosene = mean(Consumption.Commercial.Kerosene), commGas = mean(`Consumption.Commercial.Liquefied Petroleum Gases`), 
+commNatural = mean(`Consumption.Commercial.Natural Gas`) , electricCoal = mean(`Consumption.Electric Power.Coal`), electricOil = mean(`Consumption.Electric Power.Distillate Fuel Oil`),
+electricNatural = mean(`Consumption.Electric Power.Natural Gas`), industrialCoal = mean(Consumption.Industrial.Coal), industrialOil = mean(`Consumption.Industrial.Distillate Fuel Oil`), industrialKerosene = mean(Consumption.Industrial.Kerosene), industrialPetGas = mean(`Consumption.Industrial.Liquefied Petroleum Gases`), industrialNatural = mean(`Consumption.Industrial.Natural Gas`), industrialPetrol = mean(`Consumption.Industrial.Other Petroleum Products`), refineryCoal = mean(Consumption.Refinery.Coal), refineryOil = mean(`Consumption.Refinery.Distillate Fuel Oil`), refineryPetGas = mean(`Consumption.Refinery.Liquefied Petroleum Gases`), refineryNatural = mean(`Consumption.Refinery.Natural Gas`),  residentCoal = mean(Consumption.Residential.Coal), residentOil = mean(`Consumption.Residential.Distillate Fuel Oil`), residentKerosense = mean(Consumption.Residential.Kerosene), residentPetGas = mean(`Consumption.Residential.Liquefied Petroleum Gases`), residentNatural = mean(`Consumption.Residential.Natural Gas`), transportCoal = mean(Consumption.Transportation.Coal), transportOil = mean(`Consumption.Transportation.Distillate Fuel Oil`), transportPetGas = mean(`Consumption.Transportation.Liquefied Petroleum Gases`), transportNatural = mean(`Consumption.Transportation.Natural Gas`), commThermal = mean(Consumption.Commercial.Geothermal), commHydro = mean(Consumption.Commercial.Hydropower), commSolar = mean(Consumption.Commercial.Solar), commWind = mean(Consumption.Commercial.Wind), commWood = mean(Consumption.Commercial.Wood), electricWood = mean(`Consumption.Electric Power.Wood`), industrialThermal = mean(Consumption.Industrial.Geothermal), industrialHydro = mean(Consumption.Industrial.Hydropower), industrialSolar = mean(Consumption.Industrial.Solar), industrialWind = mean(Consumption.Industrial.Wind), industrialWood = mean(Consumption.Industrial.Wood),
+residentThermal = mean(Consumption.Residential.Geothermal), residentWood = mean(Consumption.Residential.Wood)) %>% kbl(caption = "Mean Consumption for all Sectors from 1960 - 2014") %>% kable_styling()
+
+# Across all the years:
+# Statistic 2: Group by region and summarise total mean for all numeric variables in reduced dataset, use kbl pacakge for title and modern styling
+
+energyJoin %>% group_by(region) %>% summarise(renewablePercent = mean(percentRenewable), renewable = mean(renewableTotal), nonRenewable = mean(nonRenewableTotal), commCol = mean(Consumption.Commercial.Coal), commOil = mean(`Consumption.Commercial.Distillate Fuel Oil`), commKerosene = mean(Consumption.Commercial.Kerosene), commGas = mean(`Consumption.Commercial.Liquefied Petroleum Gases`), 
+commNatural = mean(`Consumption.Commercial.Natural Gas`) , electricCoal = mean(`Consumption.Electric Power.Coal`), electricOil = mean(`Consumption.Electric Power.Distillate Fuel Oil`),
+electricNatural = mean(`Consumption.Electric Power.Natural Gas`), industrialCoal = mean(Consumption.Industrial.Coal), industrialOil = mean(`Consumption.Industrial.Distillate Fuel Oil`), industrialKerosene = mean(Consumption.Industrial.Kerosene), industrialPetGas = mean(`Consumption.Industrial.Liquefied Petroleum Gases`), industrialNatural = mean(`Consumption.Industrial.Natural Gas`), industrialPetrol = mean(`Consumption.Industrial.Other Petroleum Products`), refineryCoal = mean(Consumption.Refinery.Coal), refineryOil = mean(`Consumption.Refinery.Distillate Fuel Oil`), refineryPetGas = mean(`Consumption.Refinery.Liquefied Petroleum Gases`), refineryNatural = mean(`Consumption.Refinery.Natural Gas`),  residentCoal = mean(Consumption.Residential.Coal), residentOil = mean(`Consumption.Residential.Distillate Fuel Oil`), residentKerosense = mean(Consumption.Residential.Kerosene), residentPetGas = mean(`Consumption.Residential.Liquefied Petroleum Gases`), residentNatural = mean(`Consumption.Residential.Natural Gas`), transportCoal = mean(Consumption.Transportation.Coal), transportOil = mean(`Consumption.Transportation.Distillate Fuel Oil`), transportPetGas = mean(`Consumption.Transportation.Liquefied Petroleum Gases`), transportNatural = mean(`Consumption.Transportation.Natural Gas`), commThermal = mean(Consumption.Commercial.Geothermal), commHydro = mean(Consumption.Commercial.Hydropower), commSolar = mean(Consumption.Commercial.Solar), commWind = mean(Consumption.Commercial.Wind), commWood = mean(Consumption.Commercial.Wood), electricWood = mean(`Consumption.Electric Power.Wood`), industrialThermal = mean(Consumption.Industrial.Geothermal), industrialHydro = mean(Consumption.Industrial.Hydropower), industrialSolar = mean(Consumption.Industrial.Solar), industrialWind = mean(Consumption.Industrial.Wind), industrialWood = mean(Consumption.Industrial.Wood),
+residentThermal = mean(Consumption.Residential.Geothermal), residentWood = mean(Consumption.Residential.Wood)) %>% kbl(caption = "Mean Consumption for all Sectors by Region") %>% kable_styling()
+                                             
+# Statistic 3: Group by region and summarise total sd of all numeric variables
+energyJoin %>% group_by(region) %>% summarise(renewablePercent =  sd(percentRenewable), renewable =  sd(renewableTotal), nonRenewable =  sd(nonRenewableTotal), commCol =  sd(Consumption.Commercial.Coal), commOil =  sd(`Consumption.Commercial.Distillate Fuel Oil`), commKerosene =  sd(Consumption.Commercial.Kerosene), commGas =  sd(`Consumption.Commercial.Liquefied Petroleum Gases`), 
+commNatural =  sd(`Consumption.Commercial.Natural Gas`) , electricCoal =  sd(`Consumption.Electric Power.Coal`), electricOil =  sd(`Consumption.Electric Power.Distillate Fuel Oil`),
+electricNatural =  sd(`Consumption.Electric Power.Natural Gas`), industrialCoal =  sd(Consumption.Industrial.Coal), industrialOil =  sd(`Consumption.Industrial.Distillate Fuel Oil`), industrialKerosene =  sd(Consumption.Industrial.Kerosene), industrialPetGas =  sd(`Consumption.Industrial.Liquefied Petroleum Gases`), industrialNatural =  sd(`Consumption.Industrial.Natural Gas`), industrialPetrol =  sd(`Consumption.Industrial.Other Petroleum Products`), refineryCoal =  sd(Consumption.Refinery.Coal), refineryOil =  sd(`Consumption.Refinery.Distillate Fuel Oil`), refineryPetGas =  sd(`Consumption.Refinery.Liquefied Petroleum Gases`), refineryNatural =  sd(`Consumption.Refinery.Natural Gas`),  residentCoal =  sd(Consumption.Residential.Coal), residentOil =  sd(`Consumption.Residential.Distillate Fuel Oil`), residentKerosense =  sd(Consumption.Residential.Kerosene), residentPetGas =  sd(`Consumption.Residential.Liquefied Petroleum Gases`), residentNatural =  sd(`Consumption.Residential.Natural Gas`), transportCoal =  sd(Consumption.Transportation.Coal), transportOil =  sd(`Consumption.Transportation.Distillate Fuel Oil`), transportPetGas =  sd(`Consumption.Transportation.Liquefied Petroleum Gases`), transportNatural =  sd(`Consumption.Transportation.Natural Gas`), commThermal =  sd(Consumption.Commercial.Geothermal), commHydro =  sd(Consumption.Commercial.Hydropower), commSolar =  sd(Consumption.Commercial.Solar), commWind =  sd(Consumption.Commercial.Wind), commWood =  sd(Consumption.Commercial.Wood), electricWood =  sd(`Consumption.Electric Power.Wood`), industrialThermal =  sd(Consumption.Industrial.Geothermal), industrialHydro =  sd(Consumption.Industrial.Hydropower), industrialSolar = sd(Consumption.Industrial.Solar), industrialWind = sd(Consumption.Industrial.Wind), industrialWood = sd(Consumption.Industrial.Wood),
+residentThermal = sd(Consumption.Residential.Geothermal), residentWood = sd(Consumption.Residential.Wood)) %>% kbl(caption = "Standard Deviation of Consumption for all Sectors by Region") %>% kable_styling()
+
+# Statistic 4: Group by region and summarise max of all numeric variables
+energyJoin %>% group_by(region) %>% summarise(renewablePercent =  max(percentRenewable), renewable =  max(renewableTotal), nonRenewable =  max(nonRenewableTotal), commCol =  max(Consumption.Commercial.Coal), commOil =  max(`Consumption.Commercial.Distillate Fuel Oil`), commKerosene =  max(Consumption.Commercial.Kerosene), commGas =  max(`Consumption.Commercial.Liquefied Petroleum Gases`), 
+commNatural =  max(`Consumption.Commercial.Natural Gas`) , electricCoal =  max(`Consumption.Electric Power.Coal`), electricOil =  max(`Consumption.Electric Power.Distillate Fuel Oil`),
+electricNatural =  max(`Consumption.Electric Power.Natural Gas`), industrialCoal =  max(Consumption.Industrial.Coal), industrialOil =  max(`Consumption.Industrial.Distillate Fuel Oil`), industrialKerosene =  max(Consumption.Industrial.Kerosene), industrialPetGas =  max(`Consumption.Industrial.Liquefied Petroleum Gases`), industrialNatural =  max(`Consumption.Industrial.Natural Gas`), industrialPetrol =  max(`Consumption.Industrial.Other Petroleum Products`), refineryCoal =  max(Consumption.Refinery.Coal), refineryOil =  max(`Consumption.Refinery.Distillate Fuel Oil`), refineryPetGas =  max(`Consumption.Refinery.Liquefied Petroleum Gases`), refineryNatural =  max(`Consumption.Refinery.Natural Gas`),  residentCoal =  max(Consumption.Residential.Coal), residentOil =  max(`Consumption.Residential.Distillate Fuel Oil`), residentKerosense =  max(Consumption.Residential.Kerosene), residentPetGas =  max(`Consumption.Residential.Liquefied Petroleum Gases`), residentNatural =  max(`Consumption.Residential.Natural Gas`), transportCoal =  max(Consumption.Transportation.Coal), transportOil =  max(`Consumption.Transportation.Distillate Fuel Oil`), transportPetGas =  max(`Consumption.Transportation.Liquefied Petroleum Gases`), transportNatural =  max(`Consumption.Transportation.Natural Gas`), commThermal =  max(Consumption.Commercial.Geothermal), commHydro =  sd(Consumption.Commercial.Hydropower), commSolar =  sd(Consumption.Commercial.Solar), commWind =  max(Consumption.Commercial.Wind), commWood =  max(Consumption.Commercial.Wood), electricWood =  max(`Consumption.Electric Power.Wood`), industrialThermal =  max(Consumption.Industrial.Geothermal), industrialHydro =  max(Consumption.Industrial.Hydropower), industrialSolar = max(Consumption.Industrial.Solar), industrialWind = max(Consumption.Industrial.Wind), industrialWood = max(Consumption.Industrial.Wood),
+residentThermal = max(Consumption.Residential.Geothermal), residentWood = max(Consumption.Residential.Wood)) %>%  kbl(caption = "Max Consumption for all Sectors by Region") %>% kable_styling()
+
+# Statistic 5: Group by region and summarise variance of all numeric variables
+energyJoin %>% group_by(region) %>% summarise(renewablePercent =  var(percentRenewable), renewable =  var(renewableTotal), nonRenewable =  var(nonRenewableTotal), commCol =  var(Consumption.Commercial.Coal), commOil =  var(`Consumption.Commercial.Distillate Fuel Oil`), commKerosene =  var(Consumption.Commercial.Kerosene), commGas =  var(`Consumption.Commercial.Liquefied Petroleum Gases`), 
+commNatural =  var(`Consumption.Commercial.Natural Gas`) , electricCoal =  var(`Consumption.Electric Power.Coal`), electricOil =  var(`Consumption.Electric Power.Distillate Fuel Oil`),
+electricNatural =  var(`Consumption.Electric Power.Natural Gas`), industrialCoal =  var(Consumption.Industrial.Coal), industrialOil =  var(`Consumption.Industrial.Distillate Fuel Oil`), industrialKerosene =  var(Consumption.Industrial.Kerosene), industrialPetGas =  var(`Consumption.Industrial.Liquefied Petroleum Gases`), industrialNatural =  var(`Consumption.Industrial.Natural Gas`), industrialPetrol =  var(`Consumption.Industrial.Other Petroleum Products`), refineryCoal =  var(Consumption.Refinery.Coal), refineryOil =  var(`Consumption.Refinery.Distillate Fuel Oil`), refineryPetGas =  var(`Consumption.Refinery.Liquefied Petroleum Gases`), refineryNatural =  var(`Consumption.Refinery.Natural Gas`),  residentCoal =  var(Consumption.Residential.Coal), residentOil =  var(`Consumption.Residential.Distillate Fuel Oil`), residentKerosense =  var(Consumption.Residential.Kerosene), residentPetGas =  var(`Consumption.Residential.Liquefied Petroleum Gases`), residentNatural =  var(`Consumption.Residential.Natural Gas`), transportCoal =  var(Consumption.Transportation.Coal), transportOil =  var(`Consumption.Transportation.Distillate Fuel Oil`), transportPetGas =  var(`Consumption.Transportation.Liquefied Petroleum Gases`), transportNatural =  var(`Consumption.Transportation.Natural Gas`), commThermal =  var(Consumption.Commercial.Geothermal), commHydro =  var(Consumption.Commercial.Hydropower), commSolar =  var(Consumption.Commercial.Solar), commWind =  var(Consumption.Commercial.Wind), commWood =  var(Consumption.Commercial.Wood), electricWood =  var(`Consumption.Electric Power.Wood`), industrialThermal =  var(Consumption.Industrial.Geothermal), industrialHydro =  var(Consumption.Industrial.Hydropower), industrialSolar = var(Consumption.Industrial.Solar), industrialWind = var(Consumption.Industrial.Wind), industrialWood = var(Consumption.Industrial.Wood),
+residentThermal = var(Consumption.Residential.Geothermal), residentWood = var(Consumption.Residential.Wood)) %>%  kbl(caption = "Variance of Consumption for all Sectors by Region") %>% kable_styling()
+
+
+# Statistic 6: Group by region and summarise min of all numeric variables
+energyJoin %>% group_by(region) %>% summarise(renewablePercent =  min(percentRenewable), renewable =  min(renewableTotal), nonRenewable =  min(nonRenewableTotal), commCol =  min(Consumption.Commercial.Coal), commOil =  min(`Consumption.Commercial.Distillate Fuel Oil`), commKerosene =  min(Consumption.Commercial.Kerosene), commGas =  min(`Consumption.Commercial.Liquefied Petroleum Gases`), 
+commNatural =  min(`Consumption.Commercial.Natural Gas`) , electricCoal =  min(`Consumption.Electric Power.Coal`), electricOil =  min(`Consumption.Electric Power.Distillate Fuel Oil`),
+electricNatural =  min(`Consumption.Electric Power.Natural Gas`), industrialCoal =  min(Consumption.Industrial.Coal), industrialOil =  min(`Consumption.Industrial.Distillate Fuel Oil`), industrialKerosene =  min(Consumption.Industrial.Kerosene), industrialPetGas =  min(`Consumption.Industrial.Liquefied Petroleum Gases`), industrialNatural =  min(`Consumption.Industrial.Natural Gas`), industrialPetrol =  min(`Consumption.Industrial.Other Petroleum Products`), refineryCoal =  min(Consumption.Refinery.Coal), refineryOil =  min(`Consumption.Refinery.Distillate Fuel Oil`), refineryPetGas =  min(`Consumption.Refinery.Liquefied Petroleum Gases`), refineryNatural =  min(`Consumption.Refinery.Natural Gas`),  residentCoal =  min(Consumption.Residential.Coal), residentOil =  min(`Consumption.Residential.Distillate Fuel Oil`), residentKerosense =  min(Consumption.Residential.Kerosene), residentPetGas =  min(`Consumption.Residential.Liquefied Petroleum Gases`), residentNatural =  min(`Consumption.Residential.Natural Gas`), transportCoal =  min(Consumption.Transportation.Coal), transportOil =  min(`Consumption.Transportation.Distillate Fuel Oil`), transportPetGas =  min(`Consumption.Transportation.Liquefied Petroleum Gases`), transportNatural =  min(`Consumption.Transportation.Natural Gas`), commThermal =  min(Consumption.Commercial.Geothermal), commHydro =  min(Consumption.Commercial.Hydropower), commSolar =  min(Consumption.Commercial.Solar), commWind =  min(Consumption.Commercial.Wind), commWood =  min(Consumption.Commercial.Wood), electricWood =  min(`Consumption.Electric Power.Wood`), industrialThermal =  min(Consumption.Industrial.Geothermal), industrialHydro =  min(Consumption.Industrial.Hydropower), industrialSolar = min(Consumption.Industrial.Solar), industrialWind = min(Consumption.Industrial.Wind), industrialWood = min(Consumption.Industrial.Wood),
+residentThermal = min(Consumption.Residential.Geothermal), residentWood = min(Consumption.Residential.Wood)) %>%  kbl(caption = "Min Consumption for all Sectors by Region") %>% kable_styling()
+
+
+# Across specific years and filters:
+
+# Statistic 7:  in 2014, summarise total mean of all columns for California
+energyJoin %>% filter(State == 'California') %>% group_by(State) %>% summarise(renewablePercent = mean(percentRenewable), renewable = mean(renewableTotal), nonRenewable = mean(nonRenewableTotal), commCol = mean(Consumption.Commercial.Coal), commOil = mean(`Consumption.Commercial.Distillate Fuel Oil`), commKerosene = mean(Consumption.Commercial.Kerosene), commGas = mean(`Consumption.Commercial.Liquefied Petroleum Gases`), 
+commNatural = mean(`Consumption.Commercial.Natural Gas`) , electricCoal = mean(`Consumption.Electric Power.Coal`), electricOil = mean(`Consumption.Electric Power.Distillate Fuel Oil`),
+electricNatural = mean(`Consumption.Electric Power.Natural Gas`), industrialCoal = mean(Consumption.Industrial.Coal), industrialOil = mean(`Consumption.Industrial.Distillate Fuel Oil`), industrialKerosene = mean(Consumption.Industrial.Kerosene), industrialPetGas = mean(`Consumption.Industrial.Liquefied Petroleum Gases`), industrialNatural = mean(`Consumption.Industrial.Natural Gas`), industrialPetrol = mean(`Consumption.Industrial.Other Petroleum Products`), refineryCoal = mean(Consumption.Refinery.Coal), refineryOil = mean(`Consumption.Refinery.Distillate Fuel Oil`), refineryPetGas = mean(`Consumption.Refinery.Liquefied Petroleum Gases`), refineryNatural = mean(`Consumption.Refinery.Natural Gas`),  residentCoal = mean(Consumption.Residential.Coal), residentOil = mean(`Consumption.Residential.Distillate Fuel Oil`), residentKerosense = mean(Consumption.Residential.Kerosene), residentPetGas = mean(`Consumption.Residential.Liquefied Petroleum Gases`), residentNatural = mean(`Consumption.Residential.Natural Gas`), transportCoal = mean(Consumption.Transportation.Coal), transportOil = mean(`Consumption.Transportation.Distillate Fuel Oil`), transportPetGas = mean(`Consumption.Transportation.Liquefied Petroleum Gases`), transportNatural = mean(`Consumption.Transportation.Natural Gas`), commThermal = mean(Consumption.Commercial.Geothermal), commHydro = mean(Consumption.Commercial.Hydropower), commSolar = mean(Consumption.Commercial.Solar), commWind = mean(Consumption.Commercial.Wind), commWood = mean(Consumption.Commercial.Wood), electricWood = mean(`Consumption.Electric Power.Wood`), industrialThermal = mean(Consumption.Industrial.Geothermal), industrialHydro = mean(Consumption.Industrial.Hydropower), industrialSolar = mean(Consumption.Industrial.Solar), industrialWind = mean(Consumption.Industrial.Wind), industrialWood = mean(Consumption.Industrial.Wood),
+residentThermal = mean(Consumption.Residential.Geothermal), residentWood = mean(Consumption.Residential.Wood)) %>% kbl(caption = "Mean 2014 California Consumption for all Sectors") %>% kable_styling()
+
+# Statistic 8: in 2014, summarise total of all columns for Texas
+energyJoin %>% filter(State == 'Texas') %>% group_by(State) %>% summarise(renewablePercent = mean(percentRenewable), renewable = mean(renewableTotal), nonRenewable = mean(nonRenewableTotal), commCol = mean(Consumption.Commercial.Coal), commOil = mean(`Consumption.Commercial.Distillate Fuel Oil`), commKerosene = mean(Consumption.Commercial.Kerosene), commGas = mean(`Consumption.Commercial.Liquefied Petroleum Gases`), 
+commNatural = mean(`Consumption.Commercial.Natural Gas`) , electricCoal = mean(`Consumption.Electric Power.Coal`), electricOil = mean(`Consumption.Electric Power.Distillate Fuel Oil`),
+electricNatural = mean(`Consumption.Electric Power.Natural Gas`), industrialCoal = mean(Consumption.Industrial.Coal), industrialOil = mean(`Consumption.Industrial.Distillate Fuel Oil`), industrialKerosene = mean(Consumption.Industrial.Kerosene), industrialPetGas = mean(`Consumption.Industrial.Liquefied Petroleum Gases`), industrialNatural = mean(`Consumption.Industrial.Natural Gas`), industrialPetrol = mean(`Consumption.Industrial.Other Petroleum Products`), refineryCoal = mean(Consumption.Refinery.Coal), refineryOil = mean(`Consumption.Refinery.Distillate Fuel Oil`), refineryPetGas = mean(`Consumption.Refinery.Liquefied Petroleum Gases`), refineryNatural = mean(`Consumption.Refinery.Natural Gas`),  residentCoal = mean(Consumption.Residential.Coal), residentOil = mean(`Consumption.Residential.Distillate Fuel Oil`), residentKerosense = mean(Consumption.Residential.Kerosene), residentPetGas = mean(`Consumption.Residential.Liquefied Petroleum Gases`), residentNatural = mean(`Consumption.Residential.Natural Gas`), transportCoal = mean(Consumption.Transportation.Coal), transportOil = mean(`Consumption.Transportation.Distillate Fuel Oil`), transportPetGas = mean(`Consumption.Transportation.Liquefied Petroleum Gases`), transportNatural = mean(`Consumption.Transportation.Natural Gas`), commThermal = mean(Consumption.Commercial.Geothermal), commHydro = mean(Consumption.Commercial.Hydropower), commSolar = mean(Consumption.Commercial.Solar), commWind = mean(Consumption.Commercial.Wind), commWood = mean(Consumption.Commercial.Wood), electricWood = mean(`Consumption.Electric Power.Wood`), industrialThermal = mean(Consumption.Industrial.Geothermal), industrialHydro = mean(Consumption.Industrial.Hydropower), industrialSolar = mean(Consumption.Industrial.Solar), industrialWind = mean(Consumption.Industrial.Wind), industrialWood = mean(Consumption.Industrial.Wood),
+residentThermal = mean(Consumption.Residential.Geothermal), residentWood = mean(Consumption.Residential.Wood)) %>% kbl(caption = "Mean 2014 Texas Consumption for all Sectors") %>% kable_styling()
+
+# Statistic 9: For states with more than 10% renwable consumption, get max of all values for all years, use filter
+energyJoin %>% filter(percentRenewable > 10) %>% group_by(State) %>% summarise(renewablePercent = max(percentRenewable), renewable = max(renewableTotal), nonRenewable = max(nonRenewableTotal), commCol = max(Consumption.Commercial.Coal), commOil = max(`Consumption.Commercial.Distillate Fuel Oil`), commKerosene = max(Consumption.Commercial.Kerosene), commGas = max(`Consumption.Commercial.Liquefied Petroleum Gases`), 
+commNatural = max(`Consumption.Commercial.Natural Gas`) , electricCoal = max(`Consumption.Electric Power.Coal`), electricOil = max(`Consumption.Electric Power.Distillate Fuel Oil`),
+electricNatural = max(`Consumption.Electric Power.Natural Gas`), industrialCoal = max(Consumption.Industrial.Coal), industrialOil = max(`Consumption.Industrial.Distillate Fuel Oil`), industrialKerosene = max(Consumption.Industrial.Kerosene), industrialPetGas = max(`Consumption.Industrial.Liquefied Petroleum Gases`), industrialNatural = max(`Consumption.Industrial.Natural Gas`), industrialPetrol = max(`Consumption.Industrial.Other Petroleum Products`), refineryCoal = max(Consumption.Refinery.Coal), refineryOil = max(`Consumption.Refinery.Distillate Fuel Oil`), refineryPetGas = max(`Consumption.Refinery.Liquefied Petroleum Gases`), refineryNatural = max(`Consumption.Refinery.Natural Gas`),  residentCoal = max(Consumption.Residential.Coal), residentOil = max(`Consumption.Residential.Distillate Fuel Oil`), residentKerosense = max(Consumption.Residential.Kerosene), residentPetGas = max(`Consumption.Residential.Liquefied Petroleum Gases`), residentNatural = max(`Consumption.Residential.Natural Gas`), transportCoal = max(Consumption.Transportation.Coal), transportOil = max(`Consumption.Transportation.Distillate Fuel Oil`), transportPetGas = max(`Consumption.Transportation.Liquefied Petroleum Gases`), transportNatural = max(`Consumption.Transportation.Natural Gas`), commThermal = max(Consumption.Commercial.Geothermal), commHydro = max(Consumption.Commercial.Hydropower), commSolar = max(Consumption.Commercial.Solar), commWind = max(Consumption.Commercial.Wind), commWood = max(Consumption.Commercial.Wood), electricWood = max(`Consumption.Electric Power.Wood`), industrialThermal = max(Consumption.Industrial.Geothermal), industrialHydro = max(Consumption.Industrial.Hydropower), industrialSolar = max(Consumption.Industrial.Solar), industrialWind = max(Consumption.Industrial.Wind), industrialWood = max(Consumption.Industrial.Wood),
+residentThermal = max(Consumption.Residential.Geothermal), residentWood = max(Consumption.Residential.Wood)) %>% kbl(caption = "Top 10% Renewable States Max Consumption") %>% kable_styling()
+
+# Statistic 10: in 1960, summarise max of all columns for all states
+energyJoin %>% filter(Year == 1960) %>% group_by(State) %>% summarise(renewablePercent = max(percentRenewable), renewable = max(renewableTotal), nonRenewable = max(nonRenewableTotal), commCol = max(Consumption.Commercial.Coal), commOil = max(`Consumption.Commercial.Distillate Fuel Oil`), commKerosene = max(Consumption.Commercial.Kerosene), commGas = max(`Consumption.Commercial.Liquefied Petroleum Gases`), 
+commNatural = max(`Consumption.Commercial.Natural Gas`) , electricCoal = max(`Consumption.Electric Power.Coal`), electricOil = max(`Consumption.Electric Power.Distillate Fuel Oil`),
+electricNatural = max(`Consumption.Electric Power.Natural Gas`), industrialCoal = max(Consumption.Industrial.Coal), industrialOil = max(`Consumption.Industrial.Distillate Fuel Oil`), industrialKerosene = max(Consumption.Industrial.Kerosene), industrialPetGas = max(`Consumption.Industrial.Liquefied Petroleum Gases`), industrialNatural = max(`Consumption.Industrial.Natural Gas`), industrialPetrol = max(`Consumption.Industrial.Other Petroleum Products`), refineryCoal = max(Consumption.Refinery.Coal), refineryOil = max(`Consumption.Refinery.Distillate Fuel Oil`), refineryPetGas = max(`Consumption.Refinery.Liquefied Petroleum Gases`), refineryNatural = max(`Consumption.Refinery.Natural Gas`),  residentCoal = max(Consumption.Residential.Coal), residentOil = max(`Consumption.Residential.Distillate Fuel Oil`), residentKerosense = max(Consumption.Residential.Kerosene), residentPetGas = max(`Consumption.Residential.Liquefied Petroleum Gases`), residentNatural = max(`Consumption.Residential.Natural Gas`), transportCoal = max(Consumption.Transportation.Coal), transportOil = max(`Consumption.Transportation.Distillate Fuel Oil`), transportPetGas = max(`Consumption.Transportation.Liquefied Petroleum Gases`), transportNatural = max(`Consumption.Transportation.Natural Gas`), commThermal = max(Consumption.Commercial.Geothermal), commHydro = max(Consumption.Commercial.Hydropower), commSolar = max(Consumption.Commercial.Solar), commWind = max(Consumption.Commercial.Wind), commWood = max(Consumption.Commercial.Wood), electricWood = max(`Consumption.Electric Power.Wood`), industrialThermal = max(Consumption.Industrial.Geothermal), industrialHydro = max(Consumption.Industrial.Hydropower), industrialSolar = max(Consumption.Industrial.Solar), industrialWind = max(Consumption.Industrial.Wind), industrialWood = max(Consumption.Industrial.Wood),
+residentThermal = max(Consumption.Residential.Geothermal), residentWood = max(Consumption.Residential.Wood)) %>% kbl(caption = "1960 Max Energy Consumption") %>% kable_styling()
+
+# Statistic 11: Get latest (2014), pecrcent renewable, renewable total and non renewable total by Region
+
+energyJoin %>% select(State,Year, region, percentRenewable, renewableTotal, nonRenewableTotal) %>% group_by(region) %>% filter(Year == 2014) %>% summarise(renewablePercent = max(percentRenewable), renewable = max(renewableTotal), nonRenewable = max(nonRenewableTotal))%>% kbl(caption = "2014 Overall Renewable Performance") %>% kable_styling()
+
+```
+
+
+
+The first overall mean statistic I calculate showed that Maine had the highest average percentage of all energy that was renewable. This was surpirsing as I expected a more progressive state like California to have the highest average.
+My second statistic, focussing on the mean consumption by region, was similarily surprising in revealing that the Northeast region had the highest percentage of renewable energy.
+My third statistic, focussing on the standard deviation of consumption by region, showed that the Northeast region also had the highest deviation meaning it made the most investment in renewable energy from 1960 to 2014.
+My fourth statistic, showed that the Northeast region all had the max renwable energy consumption over the 1960 to 2014 period.
+My fifth statistic, showed that a chance in North Central region where this region had the smallest variance in its renewable percentage. This means that this region made the least investment in renwable energy in the same time period.
+My sixth statistic, showed that when data began collection in 1960, the West region was furthest behind with a starting 0% reliance on renwable energy.
+My seventh statistic, showed specific values for California and indicated that by 2014, 4.3% of all California energy consumption was renewable energy.
+My eight statistic showed that in Texas in 2014, an average of only 0.88% of all energy consumption was renwable energy.
+My ninth statistic showed that out of the top 10% of states with the highest renwable percentage consumption, Maine was the highest with 66% reliance on renwable energy.
+My tenth statistic showed that in 1960, Maine was the leader in renewable energy with 33% of its grid reliant.
+My eleventh statistic showed that in 2014, the overall renwable energy performance showed the Northeast region was still the leader in how much of its consumption compared to total energy was renewable based.
+These statistics were surprising and showed skewed data with respect to the size of the state. This led me to believe that even though states like California have invested the most in renewable energy, there is still a long way to go to make the majority of energy consumption renewable energy dependent.
+
+
+Part 5: Visualizations
+```{r}
+
+# Plot 1: Correlation Heatmap
+
+# Only keep variables for Consumption commercial since commercial sector is biggest area to use energy
+# Out of commercial variables, keep biggest producers of Coal, Petrol, Natural Gas, Solar, Wind, Wood
+energyMap <- energyJoin %>% select(-State) %>% select(-Year) %>% select(Consumption.Commercial.Coal,`Consumption.Commercial.Liquefied Petroleum Gases`, `Consumption.Commercial.Natural Gas`, Consumption.Commercial.Solar, Consumption.Commercial.Wind, Consumption.Commercial.Wood)
+ 
+# Source: Lab 4
+cor(energyMap) %>%
+  # Save as a data frame
+  as.data.frame %>%
+  # Convert row names to an explicit variable
+  rownames_to_column %>%
+  # Pivot so that all correlations appear in the same column
+  pivot_longer(-1, names_to = "other_var", values_to = "correlation") %>%
+  # Specify variables are displayed alphabetically from top to bottom
+  ggplot(aes(rowname, factor(other_var, levels = rev(levels(factor(other_var)))), fill=correlation)) +
+  # Heatmap with geom_tile
+  geom_tile() +
+  # Change the scale to make the middle appear neutral
+  scale_fill_gradient2(low="red",mid="white",high="blue") +
+  # Overlay values
+  geom_text(aes(label = round(correlation,2)), color = "black", size = 4) +
+  # Give title and labels
+  labs(title = "Correlation matrix for Consumption Factors", x = "", y = "") 
+
+
+# Plot 2: region on x, mean fossil fuel consumption on y, barplot, decrease x axis size with theme for visual purposes
+plot <- ggplot(data = energyJoin,  aes(x= State, y=`Consumption.Commercial.Natural Gas`, fill = region)) + geom_bar(stat = 'summary', fun = 'mean') + scale_fill_brewer(palette = "Spectral") + geom_errorbar(stat = 'summary', fun.data = 'mean_se', width = 0.5) +  theme(axis.text.x=element_text(size = 2))
+  
+# Add a title and label axes
+plot + ggtitle("Mean Natural Gas Consumption by Region (1960-2014)") + xlab("State") + ylab("Mean Renewable Consumption (Billions of BTU)")
+
+
+# Plot 3: Scatterplot of Commercial Hydropower from 1960 - 2014
+scatter<- ggplot(data = energyJoin, aes(x = Year, y = Consumption.Commercial.Hydropower, color = region))  + scale_fill_brewer(palette = "Spectral") +
+  geom_point(size=4, color = "white") + geom_line()
+
+scatter + ggtitle("Hydropower Energy Consumption by Region (1960-2014)") + xlab("Years") + ylab("Hydropower Energy Consumption (Billions of BTU)")
+
+```
+
+
+My correlation heatmap revealed an interersting strong correlation between consumption of natural gas and consumption of wood.
+This was surprising because I believed an increased reliance on renwables like wood would reduce natural gas consumption.
+The heatmap also showed a strongly postive correlation between petroleum gases and natural gas which is expected since they are both fossil fuels.
+
+My barplot showed the aveage Natural Gas Consumption for each state colored by region from 1960 to 2014. The results revealed that from 1960 to 2014, the West region had made the most change in being reliant on Fossil Fuels.
+It also showed that the North Central region was now the most reliant on Fossil Fuels in 2014. I created this barplot by showing mean observations for each state and then coloring by one of the 4 regions for each observation bar.
+
+My scatterplot showed the total consumption on Solar Energy from 1960 to 2014. I built this plot by plotting years against solar consumption and then coloring by region. 
+This plot revealed that the West region had made the moost investment in solar energy followed by the South region. This makes sense geographically based on the climates in the West and South.
+
+
+Part 6: Dimensionality Reduction
+```{r}
+
+#  Use mutate_if to isolate all the numeric variables and then scale all of them
+# Drop all non-numeric columns from dataset
+scaleNumerics <- energyJoin %>% select(-State, -Year, -stateabb, -region, -division) %>% mutate_if(is.numeric, scale)
+
+# get principal components with prcomp function
+pca <- scaleNumerics %>% prcomp
+
+# Save data provided by pca$x as a data frame and add back categorical variables
+pcaData <- as.data.frame(pca$x)
+pcaData['region']= energyJoin$region
+
+# Plot 1:  first two PCs and see distribution of observations, color by region
+ggplot(pcaData, aes(x = PC1, y = PC2, color = region)) + geom_point()  + ggtitle("Energy Consumption by Region for PC1 and PC2")
+
+# Source: Lab 5
+# Find the percentage of explained variance for each PC
+percent <- 100* (pca$sdev^2 / sum(pca$sdev^2))
+
+# Plot 2: Visualize the percentage of variance explained by each component
+perc_data <- data.frame(percent = percent, PC = 1:length(percent))
+ggplot(perc_data, aes(x = PC, y = percent)) + 
+  geom_col() + 
+  geom_text(aes(label = round(percent, 2)), size = 2, vjust = -0.5) 
+
+
+```
+
+
+I chose PCA analysis for dimensionality reduction due to the large number of numerical variables (45) in my dataset.
+The percentage of explained variance for the first 14 PCs are 24.58, 11.29, 8.29, 5.87, 4.76, 4.22, 3.53, 3.35, 2.89, 2.68, 2.39, 2.29, 2.26, 2.21.
+These 14 PCs sum to a total of 80.61% variance. For this reason, I found that t14 principal components must be considered as per Rule 2 to best represent my observations.
+
+My first plot showed the distribution of observations for just the first 2 principal components which accounted for around 35% of the total variance.
+This plot revealed that the South had the most diverse reliance on energy consumption and had the most unique values. I also found that the remaining 3 regions were relatively similar in the distribution of their energy sources due to likely national interconnectivity of the energy grid.
+
+My seccond plot showed the percentage of explained variance for each of the 43 components and demonstrated that the first 14 components were sufficient to get a good representation of the data.
+
+
+Overall, the principle finding of my study is that there is still a lot of work to be done to make the country have a majority reliance on renewable energy.
+The current leader in overall reneable energy reliance is the Northeast region with 42% renwable consumption in 2014.
+The West and South regions trail the Northeast at 12.94% and 12.38% average renewable consumption in 2014. The North central region on the other hand seems to have the most work to do with only 6.7% of its consumption being reliant on renewable sources.
+I suspect one explanation for the leadership in the Northeast region is due to the snowy, cold climate that could impact fossil fuel production.
+Overall, these numbers are definetly optimistic in the fight against climate change as it shows a rising trend in renewable energy reliance where we could see a majority reliance on renwable energy across all regions in a matter of a couple decades.
+
+
+
