@@ -1,2 +1,4 @@
-
-For my Project 2 report, my biggest areas of improvement were to create summary statistics for my EDA, mentioning what my predictors are in linear and logistic regression, and creating interaction graphs. I also did not specify which coefficients corresponded to predictors and what they would represent in the context of the underlying model. I also did not specify units and clearly label the test statistic for my PERMANOVA randomization test. In this sense, I failed to properly interpret what the results meant in context of the null hypothesis.
+For my Project 2 report, my biggest areas of improvement were to create summary statistics for my EDA, mentioning what my predictors are in linear and logistic regression, and creating interaction graphs. 
+I also did not specify which coefficients corresponded to predictors and what they would represent in the context of the underlying model. 
+I also did not specify units and clearly label the test statistic for my PERMANOVA randomization test. 
+In this sense, I failed to properly interpret what the results meant in context of the null hypothesis.
